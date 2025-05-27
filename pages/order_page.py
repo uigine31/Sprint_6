@@ -1,10 +1,9 @@
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+from base_page import BasePage
 
-class OrderPage:
+class OrderPage(BasePage):
     def __init__(self, driver):
-        self.driver = driver
+        super().__init__(driver)
 
     # Локаторы для кнопок "Заказать" на главной странице
     ORDER_BUTTON_UPPER = (By.XPATH, "//button[@class='Button_Button__ra12g' and not(contains(@class, 'Button_UltraBig__UU3Lp'))]")
@@ -35,13 +34,6 @@ class OrderPage:
     SCOOTER_LOGO_LINK = (By.CSS_SELECTOR, ".Header_LogoScooter__3lsAR")
     YANDEX_LOGO_LINK = (By.CSS_SELECTOR, ".Header_LogoYandex__3TSOI")
 
-    # Метод для закрытия cookie-баннера
-    def accept_cookies(self):
-        try:
-            WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable(self.COOKIE_BANNER_ACCEPT)).click()
-        except:
-            pass  
-
     # Динамические локаторы
     def get_metro_station_locator(self, station):
         return (By.XPATH, ".//div[text()='{}']/ancestor::button".format(station))
@@ -59,46 +51,45 @@ class OrderPage:
     def click_order_button(self, top=False):
         locator = self.ORDER_BUTTON_UPPER if top else self.ORDER_BUTTON_LOWER
         try:
-            element = WebDriverWait(self.driver, 30).until(EC.presence_of_element_located(locator))
-            self.driver.execute_script("arguments[0].scrollIntoView(true);", element)
-            WebDriverWait(self.driver, 30).until(EC.element_to_be_clickable(locator))
-            element.click()
+            self.click_element(locator)
         except Exception as e:
             print(f"Ошибка при клике на кнопку 'Заказать': {e}")
             raise
 
     def fill_first_form(self, name, surname, address, metro, phone):
-        self.driver.find_element(*self.INPUT_NAME).send_keys(name)
-        self.driver.find_element(*self.INPUT_SURNAME).send_keys(surname)
-        self.driver.find_element(*self.INPUT_ADDRESS).send_keys(address)
-        metro_input = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(self.INPUT_METRO))
+        self.send_keys_to_element(self.INPUT_NAME, name)
+        self.send_keys_to_element(self.INPUT_SURNAME, surname)
+        self.send_keys_to_element(self.INPUT_ADDRESS, address)
+        metro_input = self.wait_for_element_to_be_clickable(self.INPUT_METRO)
         metro_input.click()
-        WebDriverWait(self.driver, 15).until(EC.presence_of_element_located((By.CLASS_NAME, "select-search__row")))
+        self.wait_for_element((By.CLASS_NAME, "select-search__row"))  # Заменили EC на метод BasePage
         if not self.driver.find_elements(*self.get_metro_station_locator(metro)):
             raise Exception(f"Станция метро '{metro}' не найдена в выпадающем списке. Проверьте доступные станции.")
-        metro_element = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(self.get_metro_station_locator(metro)))
+        metro_element = self.wait_for_element_to_be_clickable(self.get_metro_station_locator(metro))
         metro_element.click()
-        self.driver.find_element(*self.INPUT_PHONE).send_keys(phone)
-        self.driver.find_element(*self.NEXT_BUTTON).click()
+        self.send_keys_to_element(self.INPUT_PHONE, phone)
+        self.click_element(self.NEXT_BUTTON)
 
     def fill_second_form(self, date, rental_period, color, comment):
-        self.driver.find_element(*self.INPUT_DELIVERY_DATE).send_keys(date)
-        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(self.get_date_locator())).click()
-        self.driver.find_element(*self.INPUT_RENTAL_DURATION).click()
-        self.driver.find_element(*self.get_rental_period_locator(rental_period)).click()
-        self.driver.find_element(*self.get_color_locator(color)).click()
-        self.driver.find_element(*self.INPUT_COURIER_COMMENT).send_keys(comment)
+        self.send_keys_to_element(self.INPUT_DELIVERY_DATE, date)
+        self.click_element(self.get_date_locator())
+        self.click_element(self.INPUT_RENTAL_DURATION)
+        self.click_element(self.get_rental_period_locator(rental_period))
+        self.click_element(self.get_color_locator(color))
+        self.send_keys_to_element(self.INPUT_COURIER_COMMENT, comment)
 
     def submit_order(self):
-        self.driver.find_element(*self.SUBMIT_ORDER_BUTTON).click()
-        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(self.CONFIRM_ORDER_BUTTON)).click()
+        self.click_element(self.SUBMIT_ORDER_BUTTON)
+        self.click_element(self.CONFIRM_ORDER_BUTTON)
 
     def check_success_modal(self):
-        return WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(self.SUCCESS_MODAL)).is_displayed()
+        return self.wait_for_element(self.SUCCESS_MODAL).is_displayed()
 
     def click_logo_scooter(self):
-        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(self.SCOOTER_LOGO_LINK)).click()
+        self.click_element(self.SCOOTER_LOGO_LINK)
 
     def click_logo_yandex(self):
-        element = WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(self.YANDEX_LOGO_LINK))
-        element.click()
+        self.click_element(self.YANDEX_LOGO_LINK)
+
+    def accept_cookies(self):
+        self.accept_cookies(self.COOKIE_BANNER_ACCEPT)

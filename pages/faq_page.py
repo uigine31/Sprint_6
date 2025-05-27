@@ -1,11 +1,9 @@
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
+from base_page import BasePage
 
-class FAQPage:
+class FAQPage(BasePage):
     def __init__(self, driver):
-        self.driver = driver
+        super().__init__(driver)
 
     # Локатор для заголовка раздела
     HEADING_FAQ_SECTION = (By.XPATH, '//div[@class="Home_SubHeader__zwi_E" and text()="Вопросы о важном"]')
@@ -33,19 +31,13 @@ class FAQPage:
 
     # Метод для закрытия cookie-баннера
     def accept_cookies(self):
-        try:
-            WebDriverWait(self.driver, 5).until(EC.element_to_be_clickable(self.COOKIE_BANNER_ACCEPT)).click()
-        except:
-            pass  
+        self.accept_cookies(self.COOKIE_BANNER_ACCEPT)
 
     # Методы для работы с локаторами
     def click_faq_item(self, index):
         faq_item = (By.ID, f"accordion__heading-{index}")
-        element = WebDriverWait(self.driver, 10).until(EC.presence_of_element_located(faq_item))
-        self.driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", element)
-        self.driver.execute_script("window.scrollBy(0, -100);")  
-        WebDriverWait(self.driver, 10).until(EC.element_to_be_clickable(faq_item)).click()
+        self.click_element(faq_item)
 
     def get_faq_text(self, index):
         faq_text = (By.ID, f"accordion__panel-{index}")
-        return WebDriverWait(self.driver, 10).until(EC.visibility_of_element_located(faq_text)).text
+        return self.get_element_text(faq_text)
