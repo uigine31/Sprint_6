@@ -46,3 +46,4 @@ class BasePage(ABC):
         """Получение текста элемента."""
         element = self.wait_for_element(locator)
         return element.text
+    
