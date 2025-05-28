@@ -1,5 +1,7 @@
 from selenium.webdriver.common.by import By
-from base_page import BasePage
+from pages.base_page import BasePage
+import allure
+import time
 
 class FAQPage(BasePage):
     def __init__(self, driver):
@@ -29,15 +31,23 @@ class FAQPage(BasePage):
     DELIVERY_OUTSIDE_MKAD = (By.ID, 'accordion__heading-7')
     TEXT_DELIVERY_OUTSIDE_MKAD = (By.ID, 'accordion__panel-7')
 
-    # Метод для закрытия cookie-баннера
+    @allure.step('Закрытие cookie-баннера')
     def accept_cookies(self):
-        self.accept_cookies(self.COOKIE_BANNER_ACCEPT)
+        super().accept_cookies(self.COOKIE_BANNER_ACCEPT)
 
-    # Методы для работы с локаторами
+    @allure.step('Клик по элементу FAQ с индексом {index}')
     def click_faq_item(self, index):
         faq_item = (By.ID, f"accordion__heading-{index}")
+        # Закрываем баннер перед кликом
+        self.accept_cookies()
+        # Увеличиваем время ожидания и повторяем проверку кликабельности
+        element = self.wait_for_element_to_be_clickable(faq_item, timeout=15)
+        self.scroll_to_element(element)
+        # Добавляем небольшую задержку, чтобы элемент стал полностью доступным
+        time.sleep(0.5)
         self.click_element(faq_item)
 
+    @allure.step('Получение текста ответа FAQ с индексом {index}')
     def get_faq_text(self, index):
         faq_text = (By.ID, f"accordion__panel-{index}")
         return self.get_element_text(faq_text)

@@ -1,5 +1,6 @@
 from selenium.webdriver.common.by import By
-from base_page import BasePage
+from pages.base_page import BasePage
+import allure
 
 class OrderPage(BasePage):
     def __init__(self, driver):
@@ -47,29 +48,27 @@ class OrderPage(BasePage):
     def get_color_locator(self, color):
         return (By.ID, color)
 
-    # Методы для работы с локаторами
+    @allure.step('Клик по кнопке "Заказать" (верхняя или нижняя)')
     def click_order_button(self, top=False):
         locator = self.ORDER_BUTTON_UPPER if top else self.ORDER_BUTTON_LOWER
-        try:
-            self.click_element(locator)
-        except Exception as e:
-            print(f"Ошибка при клике на кнопку 'Заказать': {e}")
-            raise
+        self.click_element(locator)
 
+    @allure.step('Заполнение первой формы заказа с данными: {name}, {surname}, {address}, {metro}, {phone}')
     def fill_first_form(self, name, surname, address, metro, phone):
         self.send_keys_to_element(self.INPUT_NAME, name)
         self.send_keys_to_element(self.INPUT_SURNAME, surname)
         self.send_keys_to_element(self.INPUT_ADDRESS, address)
         metro_input = self.wait_for_element_to_be_clickable(self.INPUT_METRO)
         metro_input.click()
-        self.wait_for_element((By.CLASS_NAME, "select-search__row"))  # Заменили EC на метод BasePage
-        if not self.driver.find_elements(*self.get_metro_station_locator(metro)):
-            raise Exception(f"Станция метро '{metro}' не найдена в выпадающем списке. Проверьте доступные станции.")
+        self.wait_for_element((By.CLASS_NAME, "select-search__row"))
         metro_element = self.wait_for_element_to_be_clickable(self.get_metro_station_locator(metro))
+        if not metro_element:
+            raise Exception(f"Станция метро '{metro}' не найдена в выпадающем списке. Проверьте доступные станции.")
         metro_element.click()
         self.send_keys_to_element(self.INPUT_PHONE, phone)
         self.click_element(self.NEXT_BUTTON)
 
+    @allure.step('Заполнение второй формы заказа с данными: {date}, {rental_period}, {color}, {comment}')
     def fill_second_form(self, date, rental_period, color, comment):
         self.send_keys_to_element(self.INPUT_DELIVERY_DATE, date)
         self.click_element(self.get_date_locator())
@@ -78,18 +77,23 @@ class OrderPage(BasePage):
         self.click_element(self.get_color_locator(color))
         self.send_keys_to_element(self.INPUT_COURIER_COMMENT, comment)
 
+    @allure.step('Подтверждение заказа')
     def submit_order(self):
         self.click_element(self.SUBMIT_ORDER_BUTTON)
         self.click_element(self.CONFIRM_ORDER_BUTTON)
 
+    @allure.step('Проверка отображения модального окна успешного заказа')
     def check_success_modal(self):
         return self.wait_for_element(self.SUCCESS_MODAL).is_displayed()
 
+    @allure.step('Клик по логотипу "Самокат"')
     def click_logo_scooter(self):
         self.click_element(self.SCOOTER_LOGO_LINK)
 
+    @allure.step('Клик по логотипу "Яндекс"')
     def click_logo_yandex(self):
         self.click_element(self.YANDEX_LOGO_LINK)
 
+    @allure.step('Закрытие cookie-баннера')
     def accept_cookies(self):
-        self.accept_cookies(self.COOKIE_BANNER_ACCEPT)
+        super().accept_cookies(self.COOKIE_BANNER_ACCEPT)

@@ -2,18 +2,21 @@ import pytest
 from selenium import webdriver
 from pages.order_page import OrderPage
 from data.test_data import FIRST_ORDER_DETAILS, SECOND_ORDER_DETAILS
+import allure
+from config.urls import HOME_PAGE
 
 @pytest.mark.usefixtures("setup")
 class TestOrderFlow:
+    @allure.title('Создание заказа с данными {order_data} и использованием кнопки {button_position}')
+    @allure.step('Создание заказа с данными {order_data} и кнопкой {button_position}')
     @pytest.mark.parametrize("order_data, button_position", [
         (FIRST_ORDER_DETAILS, True),  # Верхняя кнопка
         (SECOND_ORDER_DETAILS, False),  # Нижняя кнопка
     ])
     def test_create_order(self, order_data, button_position):
-        driver = self.driver
-        order_page = OrderPage(driver)
+        order_page = OrderPage(self.driver)
         
-        driver.get("https://qa-scooter.praktikum-services.ru/")
+        order_page.navigate_to(HOME_PAGE)
         
         order_page.click_order_button(top=button_position)
         

@@ -1,52 +1,33 @@
 import pytest
 from selenium import webdriver
 from pages.order_page import OrderPage
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
+import allure
+from config.urls import HOME_PAGE, BASE_URL
 
 @pytest.mark.usefixtures("setup")
 class TestLogoNavigation:
+    @allure.title('Проверка клика по логотипу "Самокат" и возвращения на главную страницу')
+    @allure.step('Проверка клика по логотипу "Самокат" и возвращения на главную страницу')
     def test_scooter_logo_click(self):
-        driver = self.driver
-        order_page = OrderPage(driver)
+        order_page = OrderPage(self.driver)
         
-        driver.get("https://qa-scooter.praktikum-services.ru/")
-        
+        order_page.navigate_to(HOME_PAGE)
         order_page.accept_cookies()
         
         order_page.click_logo_scooter()
-        
-        assert driver.current_url == "https://qa-scooter.praktikum-services.ru/", "Логотип 'Самокат' не возвращает на главную страницу"
+        assert order_page.get_current_url() == f"{BASE_URL}{HOME_PAGE}", "Логотип 'Самокат' не возвращает на главную страницу"
 
+    @allure.title('Проверка клика по логотипу "Яндекс" и открытия новой вкладки')
+    @allure.step('Проверка клика по логотипу "Яндекс" и открытия новой вкладки')
     def test_yandex_logo_click(self):
-        driver = self.driver
-        order_page = OrderPage(driver)
+        order_page = OrderPage(self.driver)
         
-        driver.get("https://qa-scooter.praktikum-services.ru/")
-        
+        order_page.navigate_to(HOME_PAGE)
         order_page.accept_cookies()
         
-        original_window = driver.current_window_handle
+        original_window = order_page.get_current_window_handle()
+        order_page.click_logo_yandex()
         
-        yandex_logo = WebDriverWait(driver, 10).until(EC.element_to_be_clickable(order_page.YANDEX_LOGO_LINK))
-        yandex_logo.click()
-        
-        try:
-            WebDriverWait(driver, 10).until(EC.number_of_windows_to_be(2))
-            all_windows = driver.window_handles
-            new_window = [window for window in all_windows if window != original_window][0]
-            driver.switch_to.window(new_window)
-            
-            WebDriverWait(driver, 20).until(
-                lambda d: "yandex.ru" in d.current_url or "ya.ru" in d.current_url,
-                "URL не изменился на страницу Яндекса"
-            )
-            
-            assert "yandex.ru" in driver.current_url or "ya.ru" in driver.current_url, f"Логотип 'Яндекс' не открывает страницу Яндекса. Текущий URL: {driver.current_url}"
-        except Exception as e:
-            print(f"Ошибка при открытии вкладки: {e}")
-            raise
-        finally:
-            if len(driver.window_handles) > 1:
-                driver.close()
-                driver.switch_to.window(original_window)
+        new_window = order_page.switch_to_new_tab(original_window, "yandex.ru")
+        current_url = order_page.get_current_url()
+        assert "yandex.ru" in current_url or "ya.ru" in current_url, f"Логотип 'Яндекс' не открывает страницу Яндекса. Текущий URL: {current_url}"
