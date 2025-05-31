@@ -1,7 +1,6 @@
 from selenium.webdriver.common.by import By
 from pages.base_page import BasePage
 import allure
-import time
 
 class FAQPage(BasePage):
     def __init__(self, driver):
@@ -40,11 +39,12 @@ class FAQPage(BasePage):
         faq_item = (By.ID, f"accordion__heading-{index}")
         # Закрываем баннер перед кликом
         self.accept_cookies()
-        # Увеличиваем время ожидания и повторяем проверку кликабельности
+        # Ждём, пока элемент станет кликабельным с увеличенным таймаутом
         element = self.wait_for_element_to_be_clickable(faq_item, timeout=15)
+        # Прокручиваем к элементу и повторяем проверку кликабельности
         self.scroll_to_element(element)
-        # Добавляем небольшую задержку, чтобы элемент стал полностью доступным
-        time.sleep(0.5)
+        # Повторная проверка кликабельности после прокрутки (без жёсткой задержки)
+        self.wait_for_element_to_be_clickable(faq_item, timeout=5)
         self.click_element(faq_item)
 
     @allure.step('Получение текста ответа FAQ с индексом {index}')
