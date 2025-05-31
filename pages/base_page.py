@@ -26,7 +26,8 @@ class BasePage(ABC):
             # Ждём, пока баннер исчезнет
             self.wait.until(EC.invisibility_of_element_located(locator))
         except (TimeoutException, ElementClickInterceptedException) as e:
-            print(f"Ошибка при закрытии cookie-баннера: {e}")
+            # Пропускаем вывод, оставляем только обработку исключения
+            pass
         except Exception as e:
             # Пробрасываем другие неожиданные исключения для дальнейшего анализа
             raise e
