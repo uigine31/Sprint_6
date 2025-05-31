@@ -2,9 +2,9 @@ import pytest
 from selenium import webdriver
 from pages.faq_page import FAQPage
 from data.test_data import EXPECTED_FAQ_RESPONSES
-import time
 import allure
 from config.urls import HOME_PAGE
+from selenium.webdriver.support import expected_conditions as EC
 
 @pytest.mark.usefixtures("setup")
 class TestFAQSection:
@@ -18,7 +18,8 @@ class TestFAQSection:
         
         faq_page.navigate_to(HOME_PAGE)
         faq_page.accept_cookies()
-        time.sleep(1)  # Даём дополнительное время на анимацию закрытия баннера
+        # Ждём исчезновения баннера вместо time.sleep
+        faq_page.wait.until(EC.invisibility_of_element_located(faq_page.COOKIE_BANNER_ACCEPT))
         
         faq_page.click_faq_item(index)
         actual_text = faq_page.get_faq_text(index)
